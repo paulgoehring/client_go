@@ -1,0 +1,1 @@
+exec gramine-sgx client
