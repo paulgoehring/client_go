@@ -16,13 +16,13 @@ endif
 
 
 client: client.go
-        go build -o client client.go
+	go build -o client client.go
 
 
 client.manifest: client.manifest.template
-        gramine-manifest \
-                -Dlog_level=$(GRAMINE_LOG_LEVEL) \
-                $< $@
+	gramine-manifest \
+		-Dlog_level=$(GRAMINE_LOG_LEVEL) \
+		$< $@
 
 # gramine-sgx-sign generates both a .sig file and a .manifest.sgx file. This is somewhat
 # hard to express properly in Make. The simple solution would be to use
@@ -38,13 +38,13 @@ client.manifest: client.manifest.template
 # as long as the other dependencies check out. This is in contrast to .PHONY, which would
 # be rebuilt on every invocation of make.
 client.sig client.manifest.sgx: sgx_sign
-        @:
+	@:
 
 .INTERMEDIATE: sgx_sign
 sgx_sign: client.manifest client
-        gramine-sgx-sign \
-                --manifest $< \
-                --output $<.sgx
+	gramine-sgx-sign \
+		--manifest $< \
+		--output $<.sgx
 
 ifeq ($(SGX),)
 GRAMINE = gramine-direct
@@ -56,7 +56,7 @@ endif
 
 .PHONY: clean
 clean:
-        $(RM) *.token *.sig *.manifest.sgx *.manifest client OUTPUT
+	$(RM) *.token *.sig *.manifest.sgx *.manifest client OUTPUT
 
 .PHONY: distclean
 distclean: clean
