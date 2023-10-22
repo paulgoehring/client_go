@@ -1,5 +1,9 @@
 CFLAGS = -Wall -Wextra
 
+NODEJS_DIR ?= /usr/bin
+
+ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
+
 ifeq ($(DEBUG),1)
 GRAMINE_LOG_LEVEL = debug
 CFLAGS += -g
@@ -22,6 +26,8 @@ client: client.go
 client.manifest: client.manifest.template
 	gramine-manifest \
 		-Dlog_level=$(GRAMINE_LOG_LEVEL) \
+		-Darch_libdir=$(ARCH_LIBDIR) \
+                -Dnodejs_dir=$(NODEJS_DIR) \
 		$< $@
 
 # gramine-sgx-sign generates both a .sig file and a .manifest.sgx file. This is somewhat
