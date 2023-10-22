@@ -17,6 +17,7 @@ endif
 client: client.go
         go build -o client client.go
 
+
 client.manifest: client.manifest.template
         gramine-manifest \
                 -Dlog_level=$(GRAMINE_LOG_LEVEL) \
