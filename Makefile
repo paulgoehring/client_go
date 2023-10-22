@@ -14,6 +14,7 @@ ifeq ($(SGX),1)
 all: client.manifest.sgx client.sig
 endif
 
+
 client: client.go
         go build -o client client.go
 
