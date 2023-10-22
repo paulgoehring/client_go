@@ -1,18 +1,28 @@
 # Hello World manifest file example
 
 loader.entrypoint = "file:{{ gramine.libos }}"
-libos.entrypoint = "/client"
+libos.entrypoint = "/start.sh"
 loader.log_level = "{{ log_level }}"
-loadler.log_file = "asd.log"
+loadler.log_file = "log.txt"
 loader.insecure__use_host_env = true
 
 
 loader.env.LD_LIBRARY_PATH = "/lib"
+# loader.env.LD_LIBRARY_PATH = "/lib:{{ arch_libdir }}:/usr/{{ arch_libdir }}"
+
+# Node.js requires eventfd2() emulation otherwise fails on `(uv_loop_init(&tracing_loop_)) == (0)'
+sys.insecure__allow_eventfd = true
+
 
 fs.mounts = [
   { path = "/lib", uri = "file:{{ gramine.runtimedir() }}" },
   { path = "/client", uri = "file:client" },
-  { type = "tmpfs", path = "/secrets" },
+  { path = "/client.js", uri = "file:client.js"},
+  { type = "tmpfs", path = "/secrets/" },
+  { path = "/etc",                uri = "file:/etc" },
+  { path = "/usr",                uri = "file:/usr" },
+  { path = "/lib",                uri = "file:{{ gramine.runtimedir() }}" },
+  { path = "{{ arch_libdir }}",   uri = "file:{{ arch_libdir }}" },
 ]
 
 sgx.debug = true
@@ -21,7 +31,11 @@ sgx.edmm_enable = {{ 'true' if env.get('EDMM', '0') == '1' else 'false' }}
 sgx.trusted_files = [
   "file:{{ gramine.libos }}",
   "file:client",
+  "file:{{ nodejs_dir }}/nodejs",
+  "file:{{ arch_libdir }}/",
+  "file:/usr/{{ arch_libdir }}/",
   "file:{{ gramine.runtimedir() }}/",
+  "file:client.js",
 ]
 
 sgx.allowed_files = [
@@ -37,5 +51,5 @@ sgx.allowed_files = [
   "file:/etc/gai.conf",
 ]
 
-sgx.enclave_size = "2G"
-sgx.max_threads = 16
+sgx.enclave_size = "4G"
+sgx.max_threads = 32
