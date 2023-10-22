@@ -1,6 +1,6 @@
 #!/bin/sh
-exec gramine-sgx client
 
 echo "Hello World!asdasd"
-
-exec gramine-sgx nodejs client.js
+chmod +x ./client
+exec gramine-sgx nodejs ./client.js
+#exec gramine-sgx ./client

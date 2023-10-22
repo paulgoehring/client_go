@@ -1,68 +1,60 @@
-CFLAGS = -Wall -Wextra
+# SPDX-License-Identifier: LGPL-3.0-or-later
 
+THIS_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 NODEJS_DIR ?= /usr/bin
 
 ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
 
 ifeq ($(DEBUG),1)
 GRAMINE_LOG_LEVEL = debug
-CFLAGS += -g
 else
 GRAMINE_LOG_LEVEL = error
-CFLAGS += -O3
 endif
 
 .PHONY: all
-all: client client.manifest
+all: nodejs.manifest
 ifeq ($(SGX),1)
-all: client.manifest.sgx client.sig
+all: nodejs.manifest.sgx nodejs.sig
 endif
 
-
 client: client.go
-	go build -o client client.go
+        go build -o client client.go
 
-
-client.manifest: client.manifest.template
-	gramine-manifest \
-		-Dlog_level=$(GRAMINE_LOG_LEVEL) \
-		-Darch_libdir=$(ARCH_LIBDIR) \
+nodejs.manifest: nodejs.manifest.template
+        gramine-manifest \
+                -Dlog_level=$(GRAMINE_LOG_LEVEL) \
+                -Darch_libdir=$(ARCH_LIBDIR) \
                 -Dnodejs_dir=$(NODEJS_DIR) \
-		$< $@
+                -Dnodejs_usr_share_dir=$(wildcard /usr/share/nodejs) \
+                $< >$@
 
-# gramine-sgx-sign generates both a .sig file and a .manifest.sgx file. This is somewhat
-# hard to express properly in Make. The simple solution would be to use
-# "Rules with Grouped Targets" (`&:`), however make on Ubuntu <= 20.04 doesn't support it.
-#
-# Simply using a normal rule with "two targets" is equivalent to creating separate rules
-# for each of the targets, and when using `make -j`, this might cause two instances
-# of gramine-sgx-sign to get launched simultaneously, potentially breaking the build.
-#
-# As a workaround, we use a dummy intermediate target, and mark both files as depending on it, to
-# get the dependency graph we want. We mark this dummy target as .INTERMEDIATE, which means
-# that make will consider the source tree up-to-date even if the sgx_sign file doesn't exist,
-# as long as the other dependencies check out. This is in contrast to .PHONY, which would
-# be rebuilt on every invocation of make.
-client.sig client.manifest.sgx: sgx_sign
-	@:
+
+# Make on Ubuntu <= 20.04 doesn't support "Rules with Grouped Targets" (`&:`),
+# for details on this workaround see
+# https://github.com/gramineproject/gramine/blob/e8735ea06c/CI-Examples/helloworld/Makefile
+nodejs.manifest.sgx nodejs.sig: sgx_sign
+        @:
 
 .INTERMEDIATE: sgx_sign
-sgx_sign: client.manifest client
-	gramine-sgx-sign \
-		--manifest $< \
-		--output $<.sgx
-
+sgx_sign: nodejs.manifest client.js
+        gramine-sgx-sign \
+                --manifest $< \
+                --output $<.sgx
+                #--key "$SGX_SIGNER_KEY"
 ifeq ($(SGX),)
 GRAMINE = gramine-direct
 else
 GRAMINE = gramine-sgx
-endif
 
-
+.PHONY: check
+check: all
+        $(GRAMINE) ./nodejs client.js > OUTPUT
+        @grep -q "Hello World" OUTPUT && echo "[ Success 1/1 ]"
+        @rm OUTPUT
 
 .PHONY: clean
 clean:
-	$(RM) *.token *.sig *.manifest.sgx *.manifest client OUTPUT
+        $(RM) *.manifest *.manifest.sgx *.token *.sig OUTPUT
 
 .PHONY: distclean
 distclean: clean
