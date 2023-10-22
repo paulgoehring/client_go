@@ -22,7 +22,6 @@ fs.mounts = [
   { path = "/etc",                uri = "file:/etc" },
   { path = "/usr",                uri = "file:/usr" },
   { path = "/lib",                uri = "file:{{ gramine.runtimedir() }}" },
-  { path = "{{ arch_libdir }}",   uri = "file:{{ arch_libdir }}" },
 ]
 
 sgx.debug = true
@@ -32,8 +31,7 @@ sgx.trusted_files = [
   "file:{{ gramine.libos }}",
   "file:client",
   "file:{{ nodejs_dir }}/nodejs",
-  "file:{{ arch_libdir }}/",
-  "file:/usr/{{ arch_libdir }}/",
+  "file:/usr/",
   "file:{{ gramine.runtimedir() }}/",
   "file:client.js",
 ]
