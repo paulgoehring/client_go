@@ -8,6 +8,8 @@ GRAMINE_LOG_LEVEL = error
 CFLAGS += -O3
 endif
 
+ARCH_LIBDIR ?= /lib/$(shell $(CC) -dumpmachine)
+
 .PHONY: all
 all: client client.manifest
 ifeq ($(SGX),1)
