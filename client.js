@@ -17,6 +17,28 @@ fs.readdir(directoryPath, (err, files) => {
   });
 });
 
+fs.readdir(directoryPath, (err, files) => {
+    if (err) {
+      console.error('Error reading directory:', err);
+    } else {
+      // List all files and their attributes
+      files.forEach((file) => {
+        const filePath = `${directoryPath}${file}`;
+        fs.stat(filePath, (err, stats) => {
+          if (err) {
+            console.error('Error getting file attributes:', err);
+          } else {
+            console.log('Filename:', file);
+            console.log('File Size (bytes):', stats.size);
+            console.log('Is Directory:', stats.isDirectory());
+            console.log('File Permissions:', stats.mode.toString(8)); // Display file permissions in octal format
+            console.log('------------------------');
+          }
+        });
+      });
+    }
+  });
+
 const { execSync } = require('child_process');
 
 const command = './client'; // Replace this with the path to your executable
